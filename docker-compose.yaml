@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  score_service:
+    build:
+      context: ./score_service
+    ports:
+      - "50052:50052"
+    container_name: score_service
+
+  auth_service:
+    build:
+      context: ./auth_service
+    ports:
+      - "50051:50051"
+    container_name: auth_service
+
+  composition_service:
+    build:
+      context: ./composition_service
+    deploy:
+      replicas: 2
+    ports:
+      - "5000"
+    depends_on:
+      - auth_service
+      - score_service
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx_load_balancer
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - composition_service
